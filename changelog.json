@@ -1,0 +1,15 @@
+{
+  "current_version": "v0.1.0-alpha",
+  "versions": [
+    {
+      "version": "v0.1.0-alpha",
+      "date": "2026-11-03",
+      "changes": [
+        "Initialized Isometric 2.5D canvas loop",
+        "Configured touch virtual D-pad and spell action buttons",
+        "Added in-game Dev Log tracking system",
+        "Integrated base Matter.js physics and tile asset hooks"
+      ]
+    }
+  ]
+}
