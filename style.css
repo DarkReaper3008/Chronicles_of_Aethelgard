@@ -7,6 +7,9 @@ body, html {
     background-color: #111;
     font-family: monospace;
     color: #fff;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
 }
 #game-container {
     position: relative;
@@ -17,6 +20,7 @@ canvas {
     display: block;
     width: 100%;
     height: 100%;
+    touch-action: none;
 }
 #ui-overlay {
     position: absolute;
@@ -65,6 +69,9 @@ canvas {
     align-items: center;
     justify-content: center;
     touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
 }
 .virtual-actions {
     display: flex;
