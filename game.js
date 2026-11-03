@@ -1,4 +1,4 @@
-// Chronicles of Aethelgard - Phase 3 Tilemap Flooring Active
+// Chronicles of Aethelgard - Centered Isometric Tilemap Engine
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -21,7 +21,7 @@ const playerBody = Bodies.circle(canvas.width / 2, canvas.height / 2, 16, {
 });
 
 const wall1 = Bodies.rectangle(canvas.width / 2, canvas.height / 2 - 100, 200, 20, { isStatic: true });
-const wall2 = Bodies.rectangle(canvas.width / 2 - 150, canvas.height / 2 + 50, 20, 150, { isStatic: true });
+const wall2 = Bodies.rectangle(canvas.width / 2 - 100, canvas.height / 2 + 50, 20, 150, { isStatic: true });
 
 Composite.add(engine.world, [playerBody, wall1, wall2]);
 
@@ -63,15 +63,17 @@ function update() {
 function drawIsometricTilemap() {
     const tileWidth = 64;
     const tileHeight = 32;
-    const cols = Math.ceil(canvas.width / tileWidth) + 4;
-    const rows = Math.ceil(canvas.height / tileHeight) + 4;
-    const offsetX = canvas.width / 2 - 100;
-    const offsetY = 100;
+    const cols = 12;
+    const rows = 12;
 
-    for (let row = -2; row < rows; row++) {
-        for (let col = -2; col < cols; col++) {
-            const x = (col - row) * (tileWidth / 2) + offsetX;
-            const y = (col + row) * (tileHeight / 2) + offsetY;
+    // Self-audit calculation: center the grid perfectly on canvas
+    const startX = canvas.width / 2;
+    const startY = canvas.height / 4;
+
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            const x = startX + (col - row) * (tileWidth / 2);
+            const y = startY + (col + row) * (tileHeight / 2);
 
             ctx.fillStyle = (col + row) % 2 === 0 ? '#1e1e24' : '#25252b';
             ctx.strokeStyle = '#141418';
@@ -126,4 +128,4 @@ function gameLoop() {
 }
 
 gameLoop();
-console.log("Chronicles of Aethelgard Phase 3 Tilemap Active.");
+console.log("Chronicles of Aethelgard Centered Tilemap Active.");
