@@ -11,3 +11,4 @@
 * Set up local Python server testing environment on port 8081.
 
 - **Update**: `atmospheric fantasy background` (Synced with Background & PixelFX Pipeline)
+- **Update**: `Add a Game Over overlay screen when playerHp reaches 0 with a restart button, and polish the HUD styling` (Synced with Background & PixelFX Pipeline)

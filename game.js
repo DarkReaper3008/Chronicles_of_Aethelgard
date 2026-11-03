@@ -1,5 +1,5 @@
 // Chronicles of Aethelgard - Full Game Build with Background & FX
-// Prompt: atmospheric fantasy background
+// Prompt: Add a Game Over overlay screen when playerHp reaches 0 with a restart button, and polish the HUD styling
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
