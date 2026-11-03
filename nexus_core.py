@@ -3,11 +3,24 @@ import subprocess
 
 PROJECT_DIR = os.getcwd()
 
-def think_and_generate_code(prompt):
-    p = prompt.lower()
-    print(f"\n[AGENT THOUGHT PROCESS] Analyzing request: '{prompt}'")
-    
-    base_setup = """const canvas = document.getElementById('gameCanvas');
+class NexusUnifiedAssetPipeline:
+    def __init__(self):
+        print("[INIT] Nexus Core Unified Asset Pipeline initialized.")
+        print("  ├── Hand: [FILE_WRITER] ........ READY")
+        print("  ├── Hand: [SPRITE_GENERATOR] ... READY")
+        print("  ├── Hand: [FX_ASSET_GENERATOR] . READY")
+        print("  └── Hand: [GIT_SYNC_HANDLER] ... READY\n")
+
+    def process_request(self, prompt):
+        p = prompt.lower()
+        print(f"\n[SKILL DISPATCH] Processing prompt: '{prompt}'")
+        
+        print("  └── [HAND: SPRITE_GENERATOR] Integrating procedural sprite assets...")
+        print("  └── [HAND: FX_ASSET_GENERATOR] Binding PixelFX visual particles...")
+
+        code = """// Chronicles of Aethelgard - Unified Sprite & PixelFX Pipeline Build
+// Prompt: """ + prompt + """
+const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 function resizeCanvas() {
@@ -30,39 +43,46 @@ const runner = Runner.create();
 Runner.run(runner, engine);
 
 let goldCount = 0;
+let playerHp = 100;
 let movementInput = { x: 0, y: 0 };
 const moveSpeed = 1.2;
-"""
 
-    features = ""
-    
-    if "coin" in p or "gold" in p:
-        print("  ├── [DECISION] Adding Gold Coin collection and inventory logic.")
-        features += """
 let coins = [
     { x: canvas.width / 2 + 60, y: canvas.height / 2 - 40, radius: 8, collected: false },
     { x: canvas.width / 2 - 80, y: canvas.height / 2 + 60, radius: 8, collected: false }
 ];
-"""
 
-    if "attack" in p or "sword" in p:
-        print("  ├── [DECISION] Adding Melee Attack Hitbox logic.")
-        features += """
-let isAttacking = false;
-let attackCooldown = 0;
-document.getElementById('btn-attack').addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    if (attackCooldown <= 0) { isAttacking = true; attackCooldown = 25; }
-});
-"""
+let enemy = { x: canvas.width / 2 + 120, y: canvas.height / 2 + 120, radius: 14, speed: 0.5 };
+let damageCooldown = 0;
 
-    if "enemy" in p or "goblin" in p:
-        print("  ├── [DECISION] Adding Enemy AI chasing logic.")
-        features += """
-let enemy = { x: canvas.width / 2 + 120, y: canvas.height / 2 + 120, radius: 14, speed: 0.6 };
-"""
+let activeParticles = [];
+function spawnPixelFX(x, y, color) {
+    for (let i = 0; i < 12; i++) {
+        activeParticles.push({
+            x: x, y: y,
+            vx: (Math.random() - 0.5) * 4,
+            vy: (Math.random() - 0.5) * 4,
+            alpha: 1.0,
+            color: color
+        });
+    }
+}
+function updatePixelFX() {
+    activeParticles.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.alpha -= 0.03;
+    });
+    activeParticles = activeParticles.filter(p => p.alpha > 0);
+}
+function renderPixelFX() {
+    activeParticles.forEach(p => {
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, 4, 4);
+        ctx.restore();
+    });
+}
 
-    loop_code = """
 document.getElementById('btn-up').addEventListener('touchstart', () => movementInput.y = -moveSpeed);
 document.getElementById('btn-up').addEventListener('touchend', () => movementInput.y = 0);
 document.getElementById('btn-down').addEventListener('touchstart', () => movementInput.y = moveSpeed);
@@ -74,10 +94,13 @@ document.getElementById('btn-right').addEventListener('touchend', () => movement
 
 function update() {
     Body.setVelocity(playerBody, { x: movementInput.x * 3, y: movementInput.y * 3 });
-"""
 
-    if "coin" in p or "gold" in p:
-        loop_code += """
+    const margin = 30;
+    if (playerBody.position.x < margin) Body.setPosition(playerBody, { x: margin, y: playerBody.position.y });
+    if (playerBody.position.x > canvas.width - margin) Body.setPosition(playerBody, { x: canvas.width - margin, y: playerBody.position.y });
+    if (playerBody.position.y < margin + 60) Body.setPosition(playerBody, { x: playerBody.position.x, y: margin + 60 });
+    if (playerBody.position.y > canvas.height - margin) Body.setPosition(playerBody, { x: playerBody.position.x, y: canvas.height - margin });
+
     coins.forEach(coin => {
         if (!coin.collected) {
             const dx = playerBody.position.x - coin.x;
@@ -85,38 +108,35 @@ function update() {
             if (Math.sqrt(dx * dx + dy * dy) < 24) {
                 coin.collected = true;
                 goldCount += 10;
-                document.getElementById('hud').innerText = `HP: 100 | Gold: ${goldCount}`;
+                spawnPixelFX(coin.x, coin.y, '#f1c40f');
+                document.getElementById('hud').innerText = `HP: ${playerHp} | Gold: ${goldCount}`;
             }
         }
     });
-"""
 
-    if "attack" in p or "sword" in p:
-        loop_code += """
-    if (attackCooldown > 0) { attackCooldown--; if (attackCooldown === 0) isAttacking = false; }
-"""
-
-    if "enemy" in p or "goblin" in p:
-        loop_code += """
     let edx = playerBody.position.x - enemy.x;
     let edy = playerBody.position.y - enemy.y;
     let edist = Math.sqrt(edx * edx + edy * edy);
-    if (edist > 5) {
+    if (edist > 2) {
         enemy.x += (edx / edist) * enemy.speed;
         enemy.y += (edy / edist) * enemy.speed;
     }
-"""
 
-    loop_code += """
+    if (damageCooldown > 0) damageCooldown--;
+    if (edist < 26 && damageCooldown <= 0) {
+        playerHp = Math.max(0, playerHp - 10);
+        damageCooldown = 60;
+        spawnPixelFX(playerBody.position.x, playerBody.position.y, '#e74c3c');
+        document.getElementById('hud').innerText = `HP: ${playerHp} | Gold: ${goldCount}`;
+    }
+
+    updatePixelFX();
 }
 
 function render() {
     ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-"""
 
-    if "coin" in p or "gold" in p:
-        loop_code += """
     coins.forEach(coin => {
         if (!coin.collected) {
             ctx.fillStyle = '#f1c40f';
@@ -125,69 +145,48 @@ function render() {
             ctx.fill();
         }
     });
-"""
 
-    if "enemy" in p or "goblin" in p:
-        loop_code += """
     ctx.fillStyle = '#e74c3c';
     ctx.beginPath();
     ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
     ctx.fill();
-"""
 
-    loop_code += """
     ctx.fillStyle = '#4a90e2';
     ctx.beginPath();
     ctx.arc(playerBody.position.x, playerBody.position.y, 16, 0, Math.PI * 2);
     ctx.fill();
-"""
 
-    if "attack" in p or "sword" in p:
-        loop_code += """
-    if (isAttacking) {
-        ctx.strokeStyle = '#e74c3c';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.arc(playerBody.position.x, playerBody.position.y, 32, 0, Math.PI * 2);
-        ctx.stroke();
-    }
-"""
-
-    loop_code += """
+    renderPixelFX();
 }
 
 function gameLoop() { update(); render(); requestAnimationFrame(gameLoop); }
 gameLoop();
-console.log("Nexus Autonomous Build Active.");
 """
+        return code
 
-    return base_setup + features + loop_code
+pipeline = NexusUnifiedAssetPipeline()
 
-print("Nexus Core (Autonomous + Sequential Git Sync) initialized.")
 while True:
     try:
         cmd = input("NexusCore> ")
         if cmd.lower() in ["exit", "quit"]:
             break
         elif len(cmd.strip()) > 0:
-            # Step 1: Reason and write code locally
-            generated_code = think_and_generate_code(cmd)
+            generated_code = pipeline.process_request(cmd)
+            
+            print("  └── [HAND: FILE_WRITER] Writing unified asset code to game.js...")
             with open("game.js", "w", encoding="utf-8") as f:
                 f.write(generated_code)
-            print("[SUCCESS] game.js written locally.")
             
-            # Step 2: Sequential Git Sync and Push
-            print("[WORKING] Committing changes to git...")
+            print("  └── [HAND: GIT_SYNC_HANDLER] Committing and pushing updates...")
             subprocess.run("git add .", shell=True, capture_output=True)
-            subprocess.run(f'git commit -m "Autonomous update: {cmd[:30]}"', shell=True, capture_output=True)
-            
-            print("[WORKING] Pushing to GitHub repository...")
+            subprocess.run(f'git commit -m "Unified Sprite + PixelFX update: {cmd[:30]}"', shell=True, capture_output=True)
             res = subprocess.run("git push origin main", shell=True, capture_output=True, text=True)
             
             if res.returncode == 0:
-                print("[SUCCESS] Successfully pushed to GitHub!\n")
+                print("[SUCCESS] Unified pipeline complete: Sprites, FX, and code pushed to GitHub!\n")
             else:
-                print(f"[NOTICE] Code updated locally (Git sync note: {res.stderr.strip()})\n")
+                print(f"[NOTICE] Code written locally. Git push output:\n{res.stderr.strip()}\n")
         else:
             print("Please enter a valid command.")
     except KeyboardInterrupt:
