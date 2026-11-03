@@ -12,3 +12,4 @@
 
 - **Update**: `atmospheric fantasy background` (Synced with Background & PixelFX Pipeline)
 - **Update**: `Add a Game Over overlay screen when playerHp reaches 0 with a restart button, and polish the HUD styling` (Synced with Background & PixelFX Pipeline)
+- **Update**: `Add a Pause button to the top UI HUD that pauses the game loop and physics engine when clicked, and show a Pause menu overlay` (Synced with Background & PixelFX Pipeline)
