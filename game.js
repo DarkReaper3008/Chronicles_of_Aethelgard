@@ -1,4 +1,4 @@
-// Chronicles of Aethelgard - Phase 2 Physics Engine
+// Chronicles of Aethelgard - Phase 3 Tilemap Flooring Active
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -60,31 +60,43 @@ function update() {
     });
 }
 
-function drawIsometricGrid() {
-    ctx.strokeStyle = '#222';
-    ctx.lineWidth = 1;
-    const tileSize = 40;
-    for (let x = 0; x < canvas.width; x += tileSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-    }
-    for (let y = 0; y < canvas.height; y += tileSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
+function drawIsometricTilemap() {
+    const tileWidth = 64;
+    const tileHeight = 32;
+    const cols = Math.ceil(canvas.width / tileWidth) + 4;
+    const rows = Math.ceil(canvas.height / tileHeight) + 4;
+    const offsetX = canvas.width / 2 - 100;
+    const offsetY = 100;
+
+    for (let row = -2; row < rows; row++) {
+        for (let col = -2; col < cols; col++) {
+            const x = (col - row) * (tileWidth / 2) + offsetX;
+            const y = (col + row) * (tileHeight / 2) + offsetY;
+
+            ctx.fillStyle = (col + row) % 2 === 0 ? '#1e1e24' : '#25252b';
+            ctx.strokeStyle = '#141418';
+            ctx.lineWidth = 1;
+
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + tileWidth / 2, y + tileHeight / 2);
+            ctx.lineTo(x, y + tileHeight);
+            ctx.lineTo(x - tileWidth / 2, y + tileHeight / 2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
     }
 }
 
 function render() {
-    ctx.fillStyle = '#1a1a1a';
+    ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    drawIsometricGrid();
+    
+    drawIsometricTilemap();
 
-    ctx.fillStyle = '#666';
-    ctx.strokeStyle = '#888';
+    ctx.fillStyle = '#4a4a52';
+    ctx.strokeStyle = '#6a6a75';
     ctx.lineWidth = 2;
     [wall1, wall2].forEach(wall => {
         ctx.beginPath();
@@ -114,4 +126,4 @@ function gameLoop() {
 }
 
 gameLoop();
-console.log("Chronicles of Aethelgard Phase 2 Physics Engine Active.");
+console.log("Chronicles of Aethelgard Phase 3 Tilemap Active.");

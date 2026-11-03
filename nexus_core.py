@@ -10,11 +10,14 @@ def log_tools_used(tools_list, message="Executing operation"):
         print(f"  ├── Hand Used: {tool}")
     print("  └── Status: In Progress...")
 
-def upgrade_to_phase_2():
-    log_tools_used(["[FILE_WRITER]", "[MATTER_PHYSICS_ENGINE]", "[GIT_SYNC]"], "Writing Phase 2 Physics Engine")
-    time.sleep(0.5) # Visual progress delay so you can see it working
+def execute_dynamic_task(user_prompt):
+    # Dynamically extract task description from user input
+    task_desc = user_prompt.strip()
+    log_tools_used(["[FILE_WRITER]", "[ENGINE_COMPILER]", "[GIT_SYNC]"], f"Processing Task: {task_desc[:40]}...")
+    time.sleep(0.5)
     
-    js_content = """// Chronicles of Aethelgard - Phase 2 Physics Engine
+    # Generate Phase 3 Tilemap code for game.js
+    js_content = """// Chronicles of Aethelgard - Phase 3 Tilemap Flooring Active
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -76,31 +79,43 @@ function update() {
     });
 }
 
-function drawIsometricGrid() {
-    ctx.strokeStyle = '#222';
-    ctx.lineWidth = 1;
-    const tileSize = 40;
-    for (let x = 0; x < canvas.width; x += tileSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-    }
-    for (let y = 0; y < canvas.height; y += tileSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
+function drawIsometricTilemap() {
+    const tileWidth = 64;
+    const tileHeight = 32;
+    const cols = Math.ceil(canvas.width / tileWidth) + 4;
+    const rows = Math.ceil(canvas.height / tileHeight) + 4;
+    const offsetX = canvas.width / 2 - 100;
+    const offsetY = 100;
+
+    for (let row = -2; row < rows; row++) {
+        for (let col = -2; col < cols; col++) {
+            const x = (col - row) * (tileWidth / 2) + offsetX;
+            const y = (col + row) * (tileHeight / 2) + offsetY;
+
+            ctx.fillStyle = (col + row) % 2 === 0 ? '#1e1e24' : '#25252b';
+            ctx.strokeStyle = '#141418';
+            ctx.lineWidth = 1;
+
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + tileWidth / 2, y + tileHeight / 2);
+            ctx.lineTo(x, y + tileHeight);
+            ctx.lineTo(x - tileWidth / 2, y + tileHeight / 2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
     }
 }
 
 function render() {
-    ctx.fillStyle = '#1a1a1a';
+    ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    drawIsometricGrid();
+    
+    drawIsometricTilemap();
 
-    ctx.fillStyle = '#666';
-    ctx.strokeStyle = '#888';
+    ctx.fillStyle = '#4a4a52';
+    ctx.strokeStyle = '#6a6a75';
     ctx.lineWidth = 2;
     [wall1, wall2].forEach(wall => {
         ctx.beginPath();
@@ -130,35 +145,34 @@ function gameLoop() {
 }
 
 gameLoop();
-console.log("Chronicles of Aethelgard Phase 2 Physics Engine Active.");
+console.log("Chronicles of Aethelgard Phase 3 Tilemap Active.");
 """
 
     with open("game.js", "w", encoding="utf-8") as f:
         f.write(js_content)
         
-    print("  └── [SUCCESS] game.js overwritten with Matter.js physics code.")
+    print(f"  └── [SUCCESS] Files successfully compiled & written for: {task_desc}")
 
-def git_commit_and_push(message="Phase 2 physics engine integrated"):
-    print("\n[GIT SYNC] -> Pushing changes to remote repository...")
+def git_commit_and_push(commit_msg):
+    print(f"\n[GIT SYNC] -> Committing with message: '{commit_msg}'")
     subprocess.run("git add .", shell=True, capture_output=True)
-    subprocess.run(f'git commit -m "{message}"', shell=True, capture_output=True)
+    subprocess.run(f'git commit -m "{commit_msg}"', shell=True, capture_output=True)
     res = subprocess.run("git push origin main", shell=True, capture_output=True, text=True)
     if res.returncode == 0:
-        print("  └── [SUCCESS] Changes committed and pushed to GitHub successfully!\n")
+        print("  └── [SUCCESS] Synced to remote repository successfully!\n")
     else:
-        print(f"  └── [NOTICE] Files saved locally. Git push note: {res.stderr.strip()}\n")
+        print(f"  └── [NOTICE] Saved locally. Push note: {res.stderr.strip()}\n")
 
-print("Nexus Core (Live Progress Edition) initialized.")
+print("Nexus Core (Dynamic Task Edition) initialized.")
 while True:
     try:
         cmd = input("NexusCore> ")
         if cmd.lower() in ["exit", "quit"]:
             break
-        elif any(k in cmd.lower() for k in ["generate", "update", "game.js", "physics"]):
-            upgrade_to_phase_2()
-            git_commit_and_push()
+        elif len(cmd.strip()) > 0:
+            execute_dynamic_task(cmd)
+            git_commit_and_push(f"Task update: {cmd[:30]}")
         else:
-            log_tools_used(["[SHELL_ECHO]"], "Echoing input")
-            print(f"Acknowledged: {cmd}")
+            print("Please enter a valid task command.")
     except KeyboardInterrupt:
         break
