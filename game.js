@@ -1,5 +1,5 @@
-// Chronicles of Aethelgard - Unified Sprite & PixelFX Pipeline Build
-// Prompt: Add procedural player sprite rendering and animation frames
+// Chronicles of Aethelgard - Full Game Build with Background & FX
+// Prompt: atmospheric fantasy background
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -114,9 +114,21 @@ function update() {
 }
 
 function render() {
-    ctx.fillStyle = '#111';
+    // 1. Render Fantasy Environment Background (Grid / Terrain Pattern)
+    ctx.fillStyle = '#16192b'; // Deep fantasy night/dungeon tone
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    ctx.strokeStyle = '#222742';
+    ctx.lineWidth = 1;
+    const gridSize = 40;
+    for (let x = 0; x < canvas.width; x += gridSize) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += gridSize) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+
+    // 2. Render Coins
     coins.forEach(coin => {
         if (!coin.collected) {
             ctx.fillStyle = '#f1c40f';
@@ -126,16 +138,19 @@ function render() {
         }
     });
 
+    // 3. Render Enemy
     ctx.fillStyle = '#e74c3c';
     ctx.beginPath();
     ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
     ctx.fill();
 
+    // 4. Render Player
     ctx.fillStyle = '#4a90e2';
     ctx.beginPath();
     ctx.arc(playerBody.position.x, playerBody.position.y, 16, 0, Math.PI * 2);
     ctx.fill();
 
+    // 5. Render PixelFX Particle Overlays
     renderPixelFX();
 }
 

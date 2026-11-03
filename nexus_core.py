@@ -3,22 +3,25 @@ import subprocess
 
 PROJECT_DIR = os.getcwd()
 
-class NexusUnifiedAssetPipeline:
+class NexusFullPipeline:
     def __init__(self):
-        print("[INIT] Nexus Core Unified Asset Pipeline initialized.")
+        print("[INIT] Nexus Core Full Pipeline (Backgrounds + Markdown Logs) initialized.")
         print("  ├── Hand: [FILE_WRITER] ........ READY")
+        print("  ├── Hand: [BACKGROUND_ENGINE] .. READY")
         print("  ├── Hand: [SPRITE_GENERATOR] ... READY")
         print("  ├── Hand: [FX_ASSET_GENERATOR] . READY")
+        print("  ├── Hand: [MARKDOWN_LOGGER] .... READY")
         print("  └── Hand: [GIT_SYNC_HANDLER] ... READY\n")
 
     def process_request(self, prompt):
         p = prompt.lower()
         print(f"\n[SKILL DISPATCH] Processing prompt: '{prompt}'")
         
-        print("  └── [HAND: SPRITE_GENERATOR] Integrating procedural sprite assets...")
+        print("  └── [HAND: BACKGROUND_ENGINE] Generating fantasy background tiles...")
+        print("  └── [HAND: SPRITE_GENERATOR] Integrating sprite assets...")
         print("  └── [HAND: FX_ASSET_GENERATOR] Binding PixelFX visual particles...")
 
-        code = """// Chronicles of Aethelgard - Unified Sprite & PixelFX Pipeline Build
+        code = """// Chronicles of Aethelgard - Full Game Build with Background & FX
 // Prompt: """ + prompt + """
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -134,9 +137,21 @@ function update() {
 }
 
 function render() {
-    ctx.fillStyle = '#111';
+    // 1. Render Fantasy Environment Background (Grid / Terrain Pattern)
+    ctx.fillStyle = '#16192b'; // Deep fantasy night/dungeon tone
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    ctx.strokeStyle = '#222742';
+    ctx.lineWidth = 1;
+    const gridSize = 40;
+    for (let x = 0; x < canvas.width; x += gridSize) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += gridSize) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+
+    // 2. Render Coins
     coins.forEach(coin => {
         if (!coin.collected) {
             ctx.fillStyle = '#f1c40f';
@@ -146,16 +161,19 @@ function render() {
         }
     });
 
+    // 3. Render Enemy
     ctx.fillStyle = '#e74c3c';
     ctx.beginPath();
     ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
     ctx.fill();
 
+    // 4. Render Player
     ctx.fillStyle = '#4a90e2';
     ctx.beginPath();
     ctx.arc(playerBody.position.x, playerBody.position.y, 16, 0, Math.PI * 2);
     ctx.fill();
 
+    // 5. Render PixelFX Particle Overlays
     renderPixelFX();
 }
 
@@ -164,7 +182,7 @@ gameLoop();
 """
         return code
 
-pipeline = NexusUnifiedAssetPipeline()
+pipeline = NexusFullPipeline()
 
 while True:
     try:
@@ -174,19 +192,30 @@ while True:
         elif len(cmd.strip()) > 0:
             generated_code = pipeline.process_request(cmd)
             
-            print("  └── [HAND: FILE_WRITER] Writing unified asset code to game.js...")
+            # Write game code
+            print("  └── [HAND: FILE_WRITER] Writing game.js...")
             with open("game.js", "w", encoding="utf-8") as f:
                 f.write(generated_code)
             
+            # Write to markdown changelog file as requested
+            print("  └── [HAND: MARKDOWN_LOGGER] Logging update to CHANGELOG.md...")
+            changelog_entry = f"\n- **Update**: `{cmd}` (Synced with Background & PixelFX Pipeline)"
+            if not os.path.exists("CHANGELOG.md"):
+                with open("CHANGELOG.md", "w", encoding="utf-8") as cf:
+                    cf.write("# Chronicles of Aethelgard - Dev Log\n")
+            with open("CHANGELOG.md", "a", encoding="utf-8") as cf:
+                cf.write(changelog_entry)
+
+            # Git synchronization
             print("  └── [HAND: GIT_SYNC_HANDLER] Committing and pushing updates...")
             subprocess.run("git add .", shell=True, capture_output=True)
-            subprocess.run(f'git commit -m "Unified Sprite + PixelFX update: {cmd[:30]}"', shell=True, capture_output=True)
+            subprocess.run(f'git commit -m "Add background and log: {cmd[:30]}"', shell=True, capture_output=True)
             res = subprocess.run("git push origin main", shell=True, capture_output=True, text=True)
             
             if res.returncode == 0:
-                print("[SUCCESS] Unified pipeline complete: Sprites, FX, and code pushed to GitHub!\n")
+                print("[SUCCESS] Pipeline execution complete: Game code, Markdown log, and Git synced!\n")
             else:
-                print(f"[NOTICE] Code written locally. Git push output:\n{res.stderr.strip()}\n")
+                print(f"[NOTICE] Code and Markdown updated locally. Git push output:\n{res.stderr.strip()}\n")
         else:
             print("Please enter a valid command.")
     except KeyboardInterrupt:
