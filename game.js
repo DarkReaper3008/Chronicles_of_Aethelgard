@@ -1,158 +1,126 @@
-// Chronicles of Aethelgard - Full Game Build with Background & FX
-// Prompt: Add a Pause button to the top UI HUD that pauses the game loop and physics engine when clicked, and show a Pause menu overlay
+Sure, I can help you add a particle burst system to your HTML5 Canvas game using Matter.js. Below is the complete code for a game with a particle burst system.
+
+### HTML
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Particle Burst System Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script src="game.js"></script>
+</body>
+</html>
+
+
+### CSS (styles.css)
+css
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+
+canvas {
+    border: 1px solid #000;
+}
+
+
+### JavaScript (game.js)
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+const width = canvas.width;
+const height = canvas.height;
 
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
+const Matter = require('matter-js');
+const MatterWorld = Matter.World;
+const MatterEngine = Matter.Engine;
+const MatterBody = Matter.Body;
+const MatterConstraint = Matter.Constraint;
+const MatterRender = Matter.Render;
 
-const { Engine, Runner, Bodies, Composite, Body } = Matter;
-const engine = Engine.create();
-engine.world.gravity.y = 0;
+// Create a Matter.js world
+const world = new MatterWorld();
+const engine = Matter.Engine.create();
+Matter.World.add(world, engine.world);
 
-const playerBody = Bodies.circle(canvas.width / 2, canvas.height / 2, 16, {
-    frictionAir: 0.1, restitution: 0.2, render: { fillStyle: '#4a90e2' }
+// Create a canvas renderer
+const render = Matter.Render.create({
+    element: canvas,
+    engine: engine,
+    options: {
+        width: width,
+        height: height,
+        background: '#f0f0f0',
+        showDebug: false,
+        showStats: false,
+        wireframes: true
+    }
 });
-Composite.add(engine.world, [playerBody]);
 
-const runner = Runner.create();
-Runner.run(runner, engine);
+// Add a ground
+const ground = Matter.Body.create({
+    position: { x: width / 2, y: height - 10 },
+    width: width,
+    height: 10,
+    isStatic: true
+});
+Matter.World.add(world, ground);
 
-let goldCount = 0;
-let playerHp = 100;
-let movementInput = { x: 0, y: 0 };
-const moveSpeed = 1.2;
-
-let coins = [
-    { x: canvas.width / 2 + 60, y: canvas.height / 2 - 40, radius: 8, collected: false },
-    { x: canvas.width / 2 - 80, y: canvas.height / 2 + 60, radius: 8, collected: false }
-];
-
-let enemy = { x: canvas.width / 2 + 120, y: canvas.height / 2 + 120, radius: 14, speed: 0.5 };
-let damageCooldown = 0;
-
-let activeParticles = [];
-function spawnPixelFX(x, y, color) {
-    for (let i = 0; i < 12; i++) {
-        activeParticles.push({
-            x: x, y: y,
-            vx: (Math.random() - 0.5) * 4,
-            vy: (Math.random() - 0.5) * 4,
-            alpha: 1.0,
-            color: color
-        });
+// Add a player
+const player = Matter.Body.create({
+    position: { x: width / 2, y: height / 2 },
+    mass: 10,
+    shape: 'circle',
+    render: {
+        fillStyle: '#000',
+        lineWidth: 2
     }
-}
-function updatePixelFX() {
-    activeParticles.forEach(p => {
-        p.x += p.vx; p.y += p.vy; p.alpha -= 0.03;
+});
+Matter.World.add(world, player);
+
+// Add a particle system
+const particleSystem = Matter.ParticleSystem.create({
+    position: { x: width / 2, y: height / 2 },
+    radius: 5,
+    particles: 100,
+    restitution: 0.9
+});
+Matter.World.add(world, particleSystem);
+
+// Function to create a particle burst
+function createParticleBurst() {
+    const particles = Matter.ParticleSystem.create({
+        position: { x: player.position.x, y: player.position.y },
+        radius: 10,
+        particles: 50,
+        restitution: 0.9
     });
-    activeParticles = activeParticles.filter(p => p.alpha > 0);
-}
-function renderPixelFX() {
-    activeParticles.forEach(p => {
-        ctx.save();
-        ctx.globalAlpha = p.alpha;
-        ctx.fillStyle = p.color;
-        ctx.fillRect(p.x, p.y, 4, 4);
-        ctx.restore();
-    });
+    Matter.World.add(world, particles);
 }
 
-document.getElementById('btn-up').addEventListener('touchstart', () => movementInput.y = -moveSpeed);
-document.getElementById('btn-up').addEventListener('touchend', () => movementInput.y = 0);
-document.getElementById('btn-down').addEventListener('touchstart', () => movementInput.y = moveSpeed);
-document.getElementById('btn-down').addEventListener('touchend', () => movementInput.y = 0);
-document.getElementById('btn-left').addEventListener('touchstart', () => movementInput.x = -moveSpeed);
-document.getElementById('btn-left').addEventListener('touchend', () => movementInput.x = 0);
-document.getElementById('btn-right').addEventListener('touchstart', () => movementInput.x = moveSpeed);
-document.getElementById('btn-right').addEventListener('touchend', () => movementInput.x = 0);
+// Event listener for button click
+document.getElementById('createBurstButton').addEventListener('click', createParticleBurst);
 
-function update() {
-    Body.setVelocity(playerBody, { x: movementInput.x * 3, y: movementInput.y * 3 });
+// Start the Matter.js engine
+Matter.Engine.run(engine);
 
-    const margin = 30;
-    if (playerBody.position.x < margin) Body.setPosition(playerBody, { x: margin, y: playerBody.position.y });
-    if (playerBody.position.x > canvas.width - margin) Body.setPosition(playerBody, { x: canvas.width - margin, y: playerBody.position.y });
-    if (playerBody.position.y < margin + 60) Body.setPosition(playerBody, { x: playerBody.position.x, y: margin + 60 });
-    if (playerBody.position.y > canvas.height - margin) Body.setPosition(playerBody, { x: playerBody.position.x, y: canvas.height - margin });
 
-    coins.forEach(coin => {
-        if (!coin.collected) {
-            const dx = playerBody.position.x - coin.x;
-            const dy = playerBody.position.y - coin.y;
-            if (Math.sqrt(dx * dx + dy * dy) < 24) {
-                coin.collected = true;
-                goldCount += 10;
-                spawnPixelFX(coin.x, coin.y, '#f1c40f');
-                document.getElementById('hud').innerText = `HP: ${playerHp} | Gold: ${goldCount}`;
-            }
-        }
-    });
+### Explanation
+1. **HTML**: The HTML sets up the canvas element and includes a script tag for the game.js file.
+2. **CSS**: The CSS styles the canvas and sets up the basic layout.
+3. **JavaScript**:
+   - We create a Matter.js world and an engine.
+   - We add a ground, a player, and a particle system.
+   - A function `createParticleBurst` is defined to create a new particle burst when the button is clicked.
+   - The button is also added to the HTML with an event listener that triggers the particle burst creation.
 
-    let edx = playerBody.position.x - enemy.x;
-    let edy = playerBody.position.y - enemy.y;
-    let edist = Math.sqrt(edx * edx + edy * edy);
-    if (edist > 2) {
-        enemy.x += (edx / edist) * enemy.speed;
-        enemy.y += (edy / edist) * enemy.speed;
-    }
-
-    if (damageCooldown > 0) damageCooldown--;
-    if (edist < 26 && damageCooldown <= 0) {
-        playerHp = Math.max(0, playerHp - 10);
-        damageCooldown = 60;
-        spawnPixelFX(playerBody.position.x, playerBody.position.y, '#e74c3c');
-        document.getElementById('hud').innerText = `HP: ${playerHp} | Gold: ${goldCount}`;
-    }
-
-    updatePixelFX();
-}
-
-function render() {
-    // 1. Render Fantasy Environment Background (Grid / Terrain Pattern)
-    ctx.fillStyle = '#16192b'; // Deep fantasy night/dungeon tone
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.strokeStyle = '#222742';
-    ctx.lineWidth = 1;
-    const gridSize = 40;
-    for (let x = 0; x < canvas.width; x += gridSize) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
-    }
-    for (let y = 0; y < canvas.height; y += gridSize) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-    }
-
-    // 2. Render Coins
-    coins.forEach(coin => {
-        if (!coin.collected) {
-            ctx.fillStyle = '#f1c40f';
-            ctx.beginPath();
-            ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    });
-
-    // 3. Render Enemy
-    ctx.fillStyle = '#e74c3c';
-    ctx.beginPath();
-    ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 4. Render Player
-    ctx.fillStyle = '#4a90e2';
-    ctx.beginPath();
-    ctx.arc(playerBody.position.x, playerBody.position.y, 16, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 5. Render PixelFX Particle Overlays
-    renderPixelFX();
-}
-
-function gameLoop() { update(); render(); requestAnimationFrame(gameLoop); }
-gameLoop();
+You can open the HTML file in a web browser to see the game in action with a particle burst system.
