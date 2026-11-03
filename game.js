@@ -1,4 +1,4 @@
-// Chronicles of Aethelgard - Centered Isometric Tilemap Engine
+// Chronicles of Aethelgard - Phase 4 Gold Coins & Inventory Active
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -27,6 +27,13 @@ Composite.add(engine.world, [playerBody, wall1, wall2]);
 
 const runner = Runner.create();
 Runner.run(runner, engine);
+
+let goldCount = 0;
+let coins = [
+    { x: canvas.width / 2 + 60, y: canvas.height / 2 - 40, radius: 8, collected: false },
+    { x: canvas.width / 2 - 80, y: canvas.height / 2 + 60, radius: 8, collected: false },
+    { x: canvas.width / 2 + 90, y: canvas.height / 2 + 80, radius: 8, collected: false }
+];
 
 let movementInput = { x: 0, y: 0 };
 const moveSpeed = 1.2;
@@ -58,6 +65,19 @@ function update() {
         x: movementInput.x * 3,
         y: movementInput.y * 3
     });
+
+    coins.forEach(coin => {
+        if (!coin.collected) {
+            const dx = playerBody.position.x - coin.x;
+            const dy = playerBody.position.y - coin.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < 24) {
+                coin.collected = true;
+                goldCount += 10;
+                document.getElementById('hud').innerText = `HP: 100 | Gold: ${goldCount}`;
+            }
+        }
+    });
 }
 
 function drawIsometricTilemap() {
@@ -65,8 +85,6 @@ function drawIsometricTilemap() {
     const tileHeight = 32;
     const cols = 12;
     const rows = 12;
-
-    // Self-audit calculation: center the grid perfectly on canvas
     const startX = canvas.width / 2;
     const startY = canvas.height / 4;
 
@@ -96,6 +114,18 @@ function render() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     drawIsometricTilemap();
+
+    coins.forEach(coin => {
+        if (!coin.collected) {
+            ctx.fillStyle = '#f1c40f';
+            ctx.beginPath();
+            ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = '#d4ac0d';
+            ctx.stroke();
+        }
+    });
 
     ctx.fillStyle = '#4a4a52';
     ctx.strokeStyle = '#6a6a75';
@@ -128,4 +158,4 @@ function gameLoop() {
 }
 
 gameLoop();
-console.log("Chronicles of Aethelgard Centered Tilemap Active.");
+console.log("Chronicles of Aethelgard Gold Coins Active.");
