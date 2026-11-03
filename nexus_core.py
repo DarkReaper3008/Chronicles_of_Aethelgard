@@ -1,127 +1,20 @@
 import os
+import time
 import subprocess
 
 PROJECT_DIR = os.getcwd()
 
-def generate_game_files():
-    os.makedirs(PROJECT_DIR, exist_ok=True)
-    
-    # 1. index.html
-    html_content = """<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chronicles of Aethelgard</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
-        <div id="ui-overlay">
-            <div id="hud">HP: 100 | Gold: 0</div>
-            <div id="changelog-panel">Phase 1: Isometric Engine Active</div>
-        </div>
-        <div id="touch-controls">
-            <div class="virtual-dpad">
-                <button id="btn-up" class="dpad-btn">▲</button>
-                <div class="dpad-row">
-                    <button id="btn-left" class="dpad-btn">◀</button>
-                    <button id="btn-right" class="dpad-btn">▶</button>
-                </div>
-                <button id="btn-down" class="dpad-btn">▼</button>
-            </div>
-            <div class="virtual-actions">
-                <button id="btn-action" class="action-btn">⚔️</button>
-            </div>
-        </div>
-    </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-    <script src="game.js"></script>
-</body>
-</html>"""
-    
-    # 2. style.css
-    css_content = """body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background-color: #111;
-    font-family: monospace;
-    color: #fff;
-}
-#game-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
-canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-}
-#ui-overlay {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    display: flex;
-    justify-content: space-between;
-    pointer-events: none;
-    font-size: 14px;
-    text-shadow: 1px 1px #000;
-}
-#changelog-panel {
-    background: rgba(0,0,0,0.6);
-    padding: 4px 8px;
-    border: 1px solid #444;
-}
-#touch-controls {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    right: 20px;
-    display: flex;
-    justify-content: space-between;
-    pointer-events: none;
-}
-.virtual-dpad {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    pointer-events: auto;
-}
-.dpad-row {
-    display: flex;
-    gap: 40px;
-}
-.dpad-btn, .action-btn {
-    width: 60px;
-    height: 60px;
-    background: rgba(255,255,255,0.2);
-    border: 2px solid rgba(255,255,255,0.5);
-    border-radius: 50%;
-    color: white;
-    font-size: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    touch-action: manipulation;
-}
-.virtual-actions {
-    display: flex;
-    align-items: flex-end;
-    pointer-events: auto;
-}
-.action-btn {
-    background: rgba(180, 50, 50, 0.4);
-    border-color: rgba(255, 100, 100, 0.8);
-}"""
+def log_tools_used(tools_list, message="Executing operation"):
+    print(f"\n[AGENT TOOL DISPATCH] -> {message}")
+    for tool in tools_list:
+        print(f"  ├── Hand Used: {tool}")
+    print("  └── Status: In Progress...")
 
-    # 3. game.js
-    js_content = """// Chronicles of Aethelgard - Phase 1 Core Engine
+def upgrade_to_phase_2():
+    log_tools_used(["[FILE_WRITER]", "[MATTER_PHYSICS_ENGINE]", "[GIT_SYNC]"], "Writing Phase 2 Physics Engine")
+    time.sleep(0.5) # Visual progress delay so you can see it working
+    
+    js_content = """// Chronicles of Aethelgard - Phase 2 Physics Engine
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -132,47 +25,55 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// Player state in 2.5D isometric projection space
-let player = {
-    x: canvas.width / 2,
-    y: canvas.height / 2,
-    vx: 0,
-    vy: 0,
-    speed: 3,
-    radius: 16
-};
+const { Engine, Runner, Bodies, Composite, Body } = Matter;
 
-// Input handling from virtual buttons
-let keys = { up: false, down: false, left: false, right: false };
+const engine = Engine.create();
+engine.world.gravity.y = 0;
 
-document.getElementById('btn-up').addEventListener('touchstart', () => keys.up = true);
-document.getElementById('btn-up').addEventListener('touchend', () => keys.up = false);
-document.getElementById('btn-down').addEventListener('touchstart', () => keys.down = true);
-document.getElementById('btn-down').addEventListener('touchend', () => keys.down = false);
-document.getElementById('btn-left').addEventListener('touchstart', () => keys.left = true);
-document.getElementById('btn-left').addEventListener('touchend', () => keys.left = false);
-document.getElementById('btn-right').addEventListener('touchstart', () => keys.right = true);
-document.getElementById('btn-right').addEventListener('touchend', () => keys.right = false);
+const playerBody = Bodies.circle(canvas.width / 2, canvas.height / 2, 16, {
+    frictionAir: 0.1,
+    restitution: 0.2,
+    render: { fillStyle: '#4a90e2' }
+});
 
-// Keyboard fallbacks for desktop testing
+const wall1 = Bodies.rectangle(canvas.width / 2, canvas.height / 2 - 100, 200, 20, { isStatic: true });
+const wall2 = Bodies.rectangle(canvas.width / 2 - 150, canvas.height / 2 + 50, 20, 150, { isStatic: true });
+
+Composite.add(engine.world, [playerBody, wall1, wall2]);
+
+const runner = Runner.create();
+Runner.run(runner, engine);
+
+let movementInput = { x: 0, y: 0 };
+const moveSpeed = 1.2;
+
+document.getElementById('btn-up').addEventListener('touchstart', () => movementInput.y = -moveSpeed);
+document.getElementById('btn-up').addEventListener('touchend', () => movementInput.y = 0);
+document.getElementById('btn-down').addEventListener('touchstart', () => movementInput.y = moveSpeed);
+document.getElementById('btn-down').addEventListener('touchend', () => movementInput.y = 0);
+document.getElementById('btn-left').addEventListener('touchstart', () => movementInput.x = -moveSpeed);
+document.getElementById('btn-left').addEventListener('touchend', () => movementInput.x = 0);
+document.getElementById('btn-right').addEventListener('touchstart', () => movementInput.x = moveSpeed);
+document.getElementById('btn-right').addEventListener('touchend', () => movementInput.x = 0);
+
 window.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowUp' || e.key === 'w') keys.up = true;
-    if (e.key === 'ArrowDown' || e.key === 's') keys.down = true;
-    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
-    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+    if (e.key === 'ArrowUp' || e.key === 'w') movementInput.y = -moveSpeed;
+    if (e.key === 'ArrowDown' || e.key === 's') movementInput.y = moveSpeed;
+    if (e.key === 'ArrowLeft' || e.key === 'a') movementInput.x = -moveSpeed;
+    if (e.key === 'ArrowRight' || e.key === 'd') movementInput.x = moveSpeed;
 });
 window.addEventListener('keyup', (e) => {
-    if (e.key === 'ArrowUp' || e.key === 'w') keys.up = false;
-    if (e.key === 'ArrowDown' || e.key === 's') keys.down = false;
-    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
-    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+    if ((e.key === 'ArrowUp' || e.key === 'w') && movementInput.y < 0) movementInput.y = 0;
+    if ((e.key === 'ArrowDown' || e.key === 's') && movementInput.y > 0) movementInput.y = 0;
+    if ((e.key === 'ArrowLeft' || e.key === 'a') && movementInput.x < 0) movementInput.x = 0;
+    if ((e.key === 'ArrowRight' || e.key === 'd') && movementInput.x > 0) movementInput.x = 0;
 });
 
 function update() {
-    if (keys.up) player.y -= player.speed;
-    if (keys.down) player.y += player.speed;
-    if (keys.left) player.x -= player.speed;
-    if (keys.right) player.x += player.speed;
+    Body.setVelocity(playerBody, {
+        x: movementInput.x * 3,
+        y: movementInput.y * 3
+    });
 }
 
 function drawIsometricGrid() {
@@ -196,13 +97,26 @@ function drawIsometricGrid() {
 function render() {
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
     drawIsometricGrid();
 
-    // Draw player placeholder (Hero character)
+    ctx.fillStyle = '#666';
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 2;
+    [wall1, wall2].forEach(wall => {
+        ctx.beginPath();
+        const vertices = wall.vertices;
+        ctx.moveTo(vertices[0].x, vertices[0].y);
+        for (let i = 1; i < vertices.length; i++) {
+            ctx.lineTo(vertices[i].x, vertices[i].y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+    });
+
     ctx.fillStyle = '#4a90e2';
     ctx.beginPath();
-    ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+    ctx.arc(playerBody.position.x, playerBody.position.y, 16, 0, Math.PI * 2);
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#ffffff';
@@ -216,38 +130,35 @@ function gameLoop() {
 }
 
 gameLoop();
-console.log("Chronicles of Aethelgard engine initialized.");
+console.log("Chronicles of Aethelgard Phase 2 Physics Engine Active.");
 """
 
-    with open("index.html", "w", encoding="utf-8") as f:
-        f.write(html_content)
-    with open("style.css", "w", encoding="utf-8") as f:
-        f.write(css_content)
     with open("game.js", "w", encoding="utf-8") as f:
         f.write(js_content)
         
-    return "Successfully generated index.html, style.css, and game.js!"
+    print("  └── [SUCCESS] game.js overwritten with Matter.js physics code.")
 
-def git_commit_and_push(message="Phase 1 core generated"):
+def git_commit_and_push(message="Phase 2 physics engine integrated"):
+    print("\n[GIT SYNC] -> Pushing changes to remote repository...")
     subprocess.run("git add .", shell=True, capture_output=True)
     subprocess.run(f'git commit -m "{message}"', shell=True, capture_output=True)
     res = subprocess.run("git push origin main", shell=True, capture_output=True, text=True)
     if res.returncode == 0:
-        return "Committed and pushed Phase 1 files to GitHub!"
-    return f"Files saved locally. Git push note: {res.stderr.strip()}"
+        print("  └── [SUCCESS] Changes committed and pushed to GitHub successfully!\n")
+    else:
+        print(f"  └── [NOTICE] Files saved locally. Git push note: {res.stderr.strip()}\n")
 
-print("Nexus Core (Builder Edition) active.")
+print("Nexus Core (Live Progress Edition) initialized.")
 while True:
     try:
         cmd = input("NexusCore> ")
         if cmd.lower() in ["exit", "quit"]:
             break
-        elif "generate" in cmd.lower() or "files" in cmd.lower():
-            print(generate_game_files())
-            print(git_commit_and_push())
-        elif "[GIT_PUSH]" in cmd:
-            print(git_commit_and_push())
+        elif any(k in cmd.lower() for k in ["generate", "update", "game.js", "physics"]):
+            upgrade_to_phase_2()
+            git_commit_and_push()
         else:
-            print(f"Acknowledged: {cmd}. Type your build command to generate files.")
+            log_tools_used(["[SHELL_ECHO]"], "Echoing input")
+            print(f"Acknowledged: {cmd}")
     except KeyboardInterrupt:
         break

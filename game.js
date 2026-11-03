@@ -1,4 +1,4 @@
-// Chronicles of Aethelgard - Phase 1 Core Engine
+// Chronicles of Aethelgard - Phase 2 Physics Engine
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -9,47 +9,55 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// Player state in 2.5D isometric projection space
-let player = {
-    x: canvas.width / 2,
-    y: canvas.height / 2,
-    vx: 0,
-    vy: 0,
-    speed: 3,
-    radius: 16
-};
+const { Engine, Runner, Bodies, Composite, Body } = Matter;
 
-// Input handling from virtual buttons
-let keys = { up: false, down: false, left: false, right: false };
+const engine = Engine.create();
+engine.world.gravity.y = 0;
 
-document.getElementById('btn-up').addEventListener('touchstart', () => keys.up = true);
-document.getElementById('btn-up').addEventListener('touchend', () => keys.up = false);
-document.getElementById('btn-down').addEventListener('touchstart', () => keys.down = true);
-document.getElementById('btn-down').addEventListener('touchend', () => keys.down = false);
-document.getElementById('btn-left').addEventListener('touchstart', () => keys.left = true);
-document.getElementById('btn-left').addEventListener('touchend', () => keys.left = false);
-document.getElementById('btn-right').addEventListener('touchstart', () => keys.right = true);
-document.getElementById('btn-right').addEventListener('touchend', () => keys.right = false);
+const playerBody = Bodies.circle(canvas.width / 2, canvas.height / 2, 16, {
+    frictionAir: 0.1,
+    restitution: 0.2,
+    render: { fillStyle: '#4a90e2' }
+});
 
-// Keyboard fallbacks for desktop testing
+const wall1 = Bodies.rectangle(canvas.width / 2, canvas.height / 2 - 100, 200, 20, { isStatic: true });
+const wall2 = Bodies.rectangle(canvas.width / 2 - 150, canvas.height / 2 + 50, 20, 150, { isStatic: true });
+
+Composite.add(engine.world, [playerBody, wall1, wall2]);
+
+const runner = Runner.create();
+Runner.run(runner, engine);
+
+let movementInput = { x: 0, y: 0 };
+const moveSpeed = 1.2;
+
+document.getElementById('btn-up').addEventListener('touchstart', () => movementInput.y = -moveSpeed);
+document.getElementById('btn-up').addEventListener('touchend', () => movementInput.y = 0);
+document.getElementById('btn-down').addEventListener('touchstart', () => movementInput.y = moveSpeed);
+document.getElementById('btn-down').addEventListener('touchend', () => movementInput.y = 0);
+document.getElementById('btn-left').addEventListener('touchstart', () => movementInput.x = -moveSpeed);
+document.getElementById('btn-left').addEventListener('touchend', () => movementInput.x = 0);
+document.getElementById('btn-right').addEventListener('touchstart', () => movementInput.x = moveSpeed);
+document.getElementById('btn-right').addEventListener('touchend', () => movementInput.x = 0);
+
 window.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowUp' || e.key === 'w') keys.up = true;
-    if (e.key === 'ArrowDown' || e.key === 's') keys.down = true;
-    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
-    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+    if (e.key === 'ArrowUp' || e.key === 'w') movementInput.y = -moveSpeed;
+    if (e.key === 'ArrowDown' || e.key === 's') movementInput.y = moveSpeed;
+    if (e.key === 'ArrowLeft' || e.key === 'a') movementInput.x = -moveSpeed;
+    if (e.key === 'ArrowRight' || e.key === 'd') movementInput.x = moveSpeed;
 });
 window.addEventListener('keyup', (e) => {
-    if (e.key === 'ArrowUp' || e.key === 'w') keys.up = false;
-    if (e.key === 'ArrowDown' || e.key === 's') keys.down = false;
-    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
-    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+    if ((e.key === 'ArrowUp' || e.key === 'w') && movementInput.y < 0) movementInput.y = 0;
+    if ((e.key === 'ArrowDown' || e.key === 's') && movementInput.y > 0) movementInput.y = 0;
+    if ((e.key === 'ArrowLeft' || e.key === 'a') && movementInput.x < 0) movementInput.x = 0;
+    if ((e.key === 'ArrowRight' || e.key === 'd') && movementInput.x > 0) movementInput.x = 0;
 });
 
 function update() {
-    if (keys.up) player.y -= player.speed;
-    if (keys.down) player.y += player.speed;
-    if (keys.left) player.x -= player.speed;
-    if (keys.right) player.x += player.speed;
+    Body.setVelocity(playerBody, {
+        x: movementInput.x * 3,
+        y: movementInput.y * 3
+    });
 }
 
 function drawIsometricGrid() {
@@ -73,13 +81,26 @@ function drawIsometricGrid() {
 function render() {
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
     drawIsometricGrid();
 
-    // Draw player placeholder (Hero character)
+    ctx.fillStyle = '#666';
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 2;
+    [wall1, wall2].forEach(wall => {
+        ctx.beginPath();
+        const vertices = wall.vertices;
+        ctx.moveTo(vertices[0].x, vertices[0].y);
+        for (let i = 1; i < vertices.length; i++) {
+            ctx.lineTo(vertices[i].x, vertices[i].y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+    });
+
     ctx.fillStyle = '#4a90e2';
     ctx.beginPath();
-    ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+    ctx.arc(playerBody.position.x, playerBody.position.y, 16, 0, Math.PI * 2);
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#ffffff';
@@ -93,4 +114,4 @@ function gameLoop() {
 }
 
 gameLoop();
-console.log("Chronicles of Aethelgard engine initialized.");
+console.log("Chronicles of Aethelgard Phase 2 Physics Engine Active.");
