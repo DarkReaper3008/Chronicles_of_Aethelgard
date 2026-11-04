@@ -1,106 +1,78 @@
 // Game.js
 
-// Initialize game variables
-let canvas;
-let ctx;
-let MatterEngine;
-let MatterWorld;
-let MatterBody;
-let MatterConstraint;
+// Initialize Matter.js world
+const Engine = Matter.Engine;
+const World = Matter.World;
+const Bodies = Matter.Bodies;
+const Constraint = Matter.Constraint;
 
-// Initialize game state
-let isRunning = false;
-let isPaused = false;
-let gameOver = false;
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-// Initialize game objects
-let startScreen;
-let gameLoop;
+const engine = Engine.create();
+const world = World.create();
 
-// Initialize game assets
-let pixelFX;
-let pauseUI;
-let gameOverUI;
+// Set up the canvas
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-// Initialize game controls
-let touchControls;
+// Define the floor tile size
+const tileWidth = 50;
+const tileHeight = 50;
 
-// Initialize game loop
-function gameLoop() {
-    // Check if game is running
-    if (isRunning) {
-        // Update game state
-        MatterEngine.update();
-
-        // Render game objects
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        MatterEngine.render();
-
-        // Check for game over
-        if (gameOver) {
-            // Render game over UI
-            ctx.drawImage(gameOverUI, canvas.width / 2 - gameOverUI.width / 2, canvas.height / 2 - gameOverUI.height / 2);
-        } else {
-            // Render pause UI if game is paused
-            if (isPaused) {
-                ctx.drawImage(pauseUI, canvas.width / 2 - pauseUI.width / 2, canvas.height / 2 - pauseUI.height / 2);
-            }
-        }
+// Generate procedural floor tiles
+function generateFloor() {
+  for (let x = 0; x < canvas.width; x += tileWidth) {
+    for (let y = 0; y < canvas.height; y += tileHeight) {
+      const tile = Bodies.rectangle(x, y, tileWidth, tileHeight, { isStatic: true, render: { fillStyle: '#333' } });
+      World.add(world, tile);
     }
-
-    // Request next frame
-    requestAnimationFrame(gameLoop);
+  }
 }
 
-// Initialize game
-function initGame() {
-    // Create game canvas
-    canvas = document.createElement('canvas');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    document.body.appendChild(canvas);
-
-    // Get canvas context
-    ctx = canvas.getContext('2d');
-
-    // Initialize Matter.js engine and world
-    MatterEngine = Matter.Engine.create();
-    MatterWorld = Matter.World.create();
-
-    // Create Matter.js body
-    MatterBody = Matter.Body.create({
-        position: { x: canvas.width / 2, y: canvas.height / 2 },
-        mass: 1,
-        friction: 0.1,
-        restitution: 0.8
-    });
-
-    // Create Matter.js constraint
-    MatterConstraint = Matter.Constraint.create({
-        bodyA: MatterBody,
-        pointA: { x: 0, y: 0 },
-        bodyB: MatterWorld.bodyA,
-        pointB: { x: canvas.width, y: 0 }
-    });
-
-    // Add Matter.js body to world
-    MatterWorld.addBody(MatterBody);
-    MatterWorld.addConstraint(MatterConstraint);
-
-    // Initialize game controls
-    touchControls = new TouchControls(canvas);
-
-    // Create game assets
-    pixelFX = new PixelFX();
-    pauseUI = new PauseUI();
-    gameOverUI = new GameOverUI();
-
-    // Start game loop
-    gameLoop();
+// Generate grid lines
+function generateGridLines() {
+  for (let x = 0; x < canvas.width; x += tileWidth) {
+    const line = Bodies.rectangle(x, 0, 1, canvas.height, { isStatic: true, render: { fillStyle: '#333' } });
+    World.add(world, line);
+  }
+  for (let y = 0; y < canvas.height; y += tileHeight) {
+    const line = Bodies.rectangle(0, y, canvas.width, 1, { isStatic: true, render: { fillStyle: '#333' } });
+    World.add(world, line);
+  }
 }
 
-// Start game
-initGame();
+// Generate stone pillars
+function generateStonePillars() {
+  for (let i = 0; i < 10; i++) {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    const pillar = Bodies.rectangle(x, y, 50, 50, { isStatic: true, render: { fillStyle: '#666' } });
+    World.add(world, pillar);
+  }
+}
 
+// Generate floating gold shards
+function generateGoldShards() {
+  for (let i = 0; i < 5; i++) {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    const shard = Bodies.circle(x, y, 10, { isStatic: false, render: { fillStyle: '#FFD700' } });
+    World.add(world, shard);
+  }
+}
 
-This code sets up a basic game loop with a main menu start screen. It uses Matter.js for physics and touch controls. The game state is managed with variables and functions, and game assets are loaded and rendered using the canvas context. The game loop checks if the game is running, updates the game state, and renders the game objects. The game controls are handled by the `TouchControls` class.
+// Update the game loop
+function update() {
+  Engine.update(engine);
+  requestAnimationFrame(update);
+}
+
+// Start the game loop
+update();
+
+// Generate the floor, grid lines, stone pillars, and gold shards
+generateFloor();
+generateGridLines();
+generateStonePillars();
+generateGoldShards();

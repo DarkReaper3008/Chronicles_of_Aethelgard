@@ -2,32 +2,43 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chronicles of Aethelgard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mobile Local AI 2D Engine</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Matter.js Physics Engine CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
-        <div id="ui-overlay">
-            <div id="hud">HP: 100 | Gold: 0</div>
-            <div id="changelog-panel">Phase 1: Isometric Engine Active</div>
-        </div>
-        <div id="touch-controls">
-            <div class="virtual-dpad">
-                <button id="btn-up" class="dpad-btn">▲</button>
-                <div class="dpad-row">
-                    <button id="btn-left" class="dpad-btn">◀</button>
-                    <button id="btn-right" class="dpad-btn">▶</button>
-                </div>
-                <button id="btn-down" class="dpad-btn">▼</button>
+    <div id="hud">HP: 100 | Gold: 0</div>
+    <button id="pause-btn">⏸ PAUSE</button>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Mobile Touch Controls HUD -->
+    <div id="touch-controls">
+        <div class="dpad">
+            <button id="btn-up" class="control-btn">▲</button>
+            <div class="dpad-middle">
+                <button id="btn-left" class="control-btn">◀</button>
+                <button id="btn-right" class="control-btn">▶</button>
             </div>
-            <div class="virtual-actions">
-                <button id="btn-action" class="action-btn">⚔️</button>
-            </div>
+            <button id="btn-down" class="control-btn">▼</button>
         </div>
+        <button id="btn-action" class="action-btn">⚔</button>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+
+    <!-- Pause Menu Overlay -->
+    <div id="pause-menu-overlay" style="display: none;">
+        <h2>GAME PAUSED</h2>
+        <button id="resume-btn">Resume Game</button>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div id="game-over-overlay" style="display: none;">
+        <h1>WASTED</h1>
+        <button id="restart-btn">Try Again</button>
+    </div>
+
     <script src="game.js"></script>
 </body>
 </html>
