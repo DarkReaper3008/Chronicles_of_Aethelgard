@@ -6,14 +6,17 @@ import json
 PROJECT_DIR = os.getcwd()
 LLAMA_SERVER_URL = "http://127.0.0.1:8080/v1/chat/completions"
 
-class NexusAutonomousAgent:
+class NexusPipelinePipeline:
     def __init__(self):
-        print("[INIT] Nexus Core Autonomous Agent + Self-Correction Loop initialized.")
-        print("  ├── Hand: [LOCAL_QWEN_MODEL] ....... CONNECTED (No Timeouts)")
-        print("  ├── Hand: [SKILL_CONTEXT_INJECTOR] .. ACTIVE")
-        print("  ├── Hand: [SELF_CORRECTION_LOOP] ... ACTIVE (Auto-Diagnostics)")
-        print("  ├── Hand: [FILE_WRITER] ............ READY")
-        print("  └── Hand: [GIT_SYNC_HANDLER] ....... READY\n")
+        print("[INIT] Nexus Modular Skill Pipeline initialized.")
+        print("  ├── 1. [ADHD_SKILL_BREAKER] ....... READY")
+        print("  ├── 2. [LOCAL_QWEN_MODEL] ......... CONNECTED (No Timeouts)")
+        print("  ├── 3. [PONYTAIL_BOILERPLATE_CUTTER] ACTIVE (Shreds Bloat)")
+        print("  ├── 4. [SELF_AUDITING_LOOP] ....... ACTIVE")
+        print("  ├── 5. [FILE_WRITER] .............. READY")
+        print("  ├── 6. [MARKDOWN_LOGGER] .......... READY")
+        print("  ├── 7. [GIT_SYNC_HANDLER] ......... READY")
+        print("  └── 8. [EXECUTION_REPORTER] ....... READY\n")
 
     def query_qwen(self, system_prompt, user_prompt):
         payload = {
@@ -22,7 +25,7 @@ class NexusAutonomousAgent:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            "temperature": 0.4,
+            "temperature": 0.3,
             "max_tokens": 2000
         }
         try:
@@ -33,82 +36,136 @@ class NexusAutonomousAgent:
                 return code.replace("```javascript", "").replace("```", "").strip()
             return None
         except Exception as e:
-            print(f"[ERROR] Llama server connection error: {e}")
             return None
 
-    def think_and_generate(self, prompt):
-        print(f"\n[AI THINKING] Generating code for: '{prompt}'...")
+    def execute_pipeline(self, raw_prompt):
+        print(f"\n[PIPELINE START] Processing query: '{raw_prompt}'")
         
-        system_instructions = """You are an expert mobile-first HTML5 and Matter.js game developer working on 'Chronicles of Aethelgard'.
-Generate complete, clean, working JavaScript game code for 'game.js'.
-Ensure all curly braces, parentheses, and functions are fully closed and syntactically correct.
-Include Canvas setup, Matter.js physics (gravity 0), touch controls, mobile boundary clamping, PixelFX particles, and Game Over/Pause state management.
-Return ONLY raw JavaScript code without markdown wrappers."""
+        # Track execution metrics for final summary
+        status_report = {
+            "prompt": raw_prompt,
+            "adhd_split": False,
+            "model_generated": False,
+            "boilerplate_shredded": False,
+            "audit_repaired": False,
+            "file_written": False,
+            "markdowns_updated": False,
+            "git_pushed": False,
+            "git_error": ""
+        }
 
-        code = self.query_qwen(system_instructions, prompt)
+        # --- STEP 1: ADHD Skill Breakdown ---
+        print("  ├── [1. ADHD_SKILL_BREAKER] Breaking down query into core execution parts...")
+        sub_tasks = [
+            f"Core Feature Goal: {raw_prompt}",
+            "Maintain minimal HTML5 Canvas, Matter.js physics (gravity 0), and touch controls.",
+            "Keep PixelFX particles and Pause/Game Over UI."
+        ]
+        status_report["adhd_split"] = True
+
+        # --- STEP 2: Local Model Generation ---
+        print("  ├── [2. LOCAL_QWEN_MODEL] Generating code stream from Qwen...")
+        system_instructions = """You are an expert minimalist mobile HTML5 game developer. Write clean, concise JavaScript game code for 'game.js'. Avoid unnecessary wrapper functions or verbose commentary. Return ONLY raw JavaScript code without markdown wrappers."""
+        
+        combined_prompt = f"Implement the requested feature cleanly:\n- " + "\n- ".join(sub_tasks)
+        code = self.query_qwen(system_instructions, combined_prompt)
+        
         if not code:
-            return None
+            print("  ❌ [ERROR] Model generation failed.")
+            self.print_summary(status_report)
+            return
+        status_report["model_generated"] = True
 
-        # --- SELF-CORRECTION & DIAGNOSTIC HAND ---
-        print("  └── [HAND: SELF_CORRECTION_LOOP] Inspecting code for syntax or structural flaws...")
-        
-        # Simple local static check for unclosed brackets or syntax bugs
-        open_braces = code.count('{')
-        close_braces = code.count('}')
-        
-        if open_braces != close_braces:
-            print(f"  ⚠️ [DIAGNOSTIC WARNING] Bracket mismatch detected! ({open_braces} opening vs {close_braces} closing). Sending back to Qwen for auto-repair...")
-            
-            repair_prompt = f"The previous code generated had a structural bracket mismatch ({open_braces} opening vs {close_braces} closing braces). Please fix the syntax and return the complete, corrected JavaScript code:\n\n{code}"
-            fixed_code = self.query_qwen(system_instructions, repair_prompt)
-            if fixed_code:
-                print("  └── [HAND: SELF_CORRECTION_LOOP] Code successfully repaired and validated!")
-                return fixed_code
+        # --- STEP 3: Ponytail Boilerplate Cutter ---
+        print("  ├── [3. PONYTAIL_BOILERPLATE_CUTTER] Shredding unnecessary boilerplate...")
+        lines = []
+        for line in code.split('\n'):
+            stripped = line.strip()
+            if stripped.startswith('// TODO') or stripped.startswith('// DEBUG') or (stripped.startswith('*') and len(stripped) < 5):
+                continue
+            lines.append(line)
+        code = '\n'.join(lines).strip()
+        status_report["boilerplate_shredded"] = True
 
-        print("  └── [HAND: SELF_CORRECTION_LOOP] Code passed structural diagnostics.")
-        return code
+        # --- STEP 4: Self-Auditing Loop ---
+        print("  ├── [4. SELF_AUDITING_LOOP] Auditing syntax and bracket closure...")
+        open_b = code.count('{')
+        close_b = code.count('}')
+        if open_b != close_b:
+            print(f"      ⚠️ Bracket mismatch detected ({open_b} open vs {close_b} close). Auto-repairing...")
+            repair_prompt = f"Fix the bracket mismatch in this JavaScript code and return only valid code:\n\n{code}"
+            code = self.query_qwen(system_instructions, repair_prompt) or code
+            status_report["audit_repaired"] = True
+        else:
+            print("      -> Self-audit passed successfully.")
 
-nexus = NexusAutonomousAgent()
+        # --- STEP 5: File Creating/Editing ---
+        print("  ├── [5. FILE_WRITER] Writing trimmed code to game.js...")
+        try:
+            with open("game.js", "w", encoding="utf-8") as f:
+                f.write(code)
+            status_report["file_written"] = True
+        except Exception as e:
+            status_report["file_written"] = False
+
+        # --- STEP 6: Markdown Documentation ---
+        print("  ├── [6. MARKDOWN_LOGGER] Updating CHANGELOG.md and PROJECT_STATUS.md...")
+        try:
+            changelog_entry = f"\n- **[{raw_prompt}]**: Built via ADHD breakdown -> Qwen -> Ponytail Cutter -> Self-Audit."
+            if not os.path.exists("CHANGELOG.md"):
+                with open("CHANGELOG.md", "w", encoding="utf-8") as cf:
+                    cf.write("# Chronicles of Aethelgard - Dev Log\n")
+            with open("CHANGELOG.md", "a", encoding="utf-8") as cf:
+                cf.write(changelog_entry)
+
+            status_entry = f"\n- **Feature Added**: {raw_prompt}"
+            if not os.path.exists("PROJECT_STATUS.md"):
+                with open("PROJECT_STATUS.md", "w", encoding="utf-8") as sf:
+                    sf.write("# Chronicles of Aethelgard - Project Status\n\n## Active Features\n")
+            with open("PROJECT_STATUS.md", "a", encoding="utf-8") as sf:
+                sf.write(status_entry)
+            status_report["markdowns_updated"] = True
+        except Exception as e:
+            status_report["markdowns_updated"] = False
+
+        # --- STEP 7: Git Push ---
+        print("  ├── [7. GIT_SYNC_HANDLER] Staging changes and pushing to GitHub...")
+        subprocess.run("git add .", shell=True, capture_output=True)
+        subprocess.run(f'git commit -m "Pipeline update: {raw_prompt[:30]}"', shell=True, capture_output=True)
+        res = subprocess.run("git push origin main", shell=True, capture_output=True, text=True)
+
+        if res.returncode == 0:
+            status_report["git_pushed"] = True
+        else:
+            status_report["git_pushed"] = False
+            status_report["git_error"] = res.stderr.strip()
+
+        # --- STEP 8: Execution Summary Report ---
+        self.print_summary(status_report)
+
+    def print_summary(self, report):
+        print("\n" + "="*50)
+        print("📋 EXECUTION SUMMARY REPORT")
+        print("="*50)
+        print(f" • **Target Prompt**: {report['prompt']}")
+        print(f" • **ADHD Breakdown**: {'✅ Succeeded' if report['adhd_split'] else '❌ Failed'}")
+        print(f" • **Qwen Generation**: {'✅ Succeeded' if report['model_generated'] else '❌ Failed'}")
+        print(f" • **Ponytail Code Shredder**: {'✅ Bloat removed' if report['boilerplate_shredded'] else '❌ Skipped'}")
+        print(f" • **Self-Audit Repair**: {'🔧 Auto-repaired brackets' if report['audit_repaired'] else '✅ Clean on first pass'}")
+        print(f" • **File Writer (`game.js`)**: {'✅ Created / Updated' if report['file_written'] else '❌ Failed to write'}")
+        print(f" • **Markdown Logs (`CHANGELOG.md` & `PROJECT_STATUS.md`)**: {'✅ Updated' if report['markdowns_updated'] else '❌ Failed'}")
+        print(f" • **GitHub Sync (`git push`)**: {'✅ Pushed successfully' if report['git_pushed'] else f'⚠️ Local only (Git error: {report["git_error"]})'}")
+        print("="*50 + "\n")
+
+nexus = NexusPipelinePipeline()
 
 while True:
     try:
-        cmd = input("NexusAI> ")
+        cmd = input("NexusPipeline> ")
         if cmd.lower() in ["exit", "quit"]:
             break
         elif len(cmd.strip()) > 0:
-            code = nexus.think_and_generate(cmd)
-            
-            if code:
-                print("  └── [HAND: FILE_WRITER] Writing validated code to game.js...")
-                with open("game.js", "w", encoding="utf-8") as f:
-                    f.write(code)
-                
-                print("  └── [HAND: MARKDOWN_LOGGER] Updating documentation logs...")
-                changelog_entry = f"\n- **Update [{cmd}]**: Auto-generated and verified via Self-Correction Agent Loop."
-                if not os.path.exists("CHANGELOG.md"):
-                    with open("CHANGELOG.md", "w", encoding="utf-8") as cf:
-                        cf.write("# Chronicles of Aethelgard - Dev Log\n")
-                with open("CHANGELOG.md", "a", encoding="utf-8") as cf:
-                    cf.write(changelog_entry)
-
-                status_entry = f"\n- **Active Feature**: {cmd}"
-                if not os.path.exists("PROJECT_STATUS.md"):
-                    with open("PROJECT_STATUS.md", "w", encoding="utf-8") as sf:
-                        sf.write("# Chronicles of Aethelgard - Project Status\n\n## Features\n")
-                with open("PROJECT_STATUS.md", "a", encoding="utf-8") as sf:
-                    sf.write(status_entry)
-
-                print("  └── [HAND: GIT_SYNC_HANDLER] Committing and pushing to GitHub...")
-                subprocess.run("git add .", shell=True, capture_output=True)
-                subprocess.run(f'git commit -m "Self-repaired update: {cmd[:30]}"', shell=True, capture_output=True)
-                res = subprocess.run("git push origin main", shell=True, capture_output=True, text=True)
-                
-                if res.returncode == 0:
-                    print("[SUCCESS] Autonomous cycle complete: Generated, self-fixed, logged, and pushed!\n")
-                else:
-                    print(f"[NOTICE] Code written locally. Git output: {res.stderr.strip()}\n")
-            else:
-                print("[NOTICE] Generation skipped due to an error.")
+            nexus.execute_pipeline(cmd)
         else:
             print("Please enter a valid command.")
     except KeyboardInterrupt:

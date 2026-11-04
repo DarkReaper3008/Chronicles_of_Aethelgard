@@ -14,3 +14,4 @@
 - **Update**: `Add a Game Over overlay screen when playerHp reaches 0 with a restart button, and polish the HUD styling` (Synced with Background & PixelFX Pipeline)
 - **Update**: `Add a Pause button to the top UI HUD that pauses the game loop and physics engine when clicked, and show a Pause menu overlay` (Synced with Background & PixelFX Pipeline)
 - **Update [Add Kaelen the elemental character sprite with glowing cyan aura particles (#4a90e2), dynamic ponytail physics that sway with movement, a restless/energetic movement style, and electrostatic spark animation frames when collecting items or taking damage]**: Auto-generated and verified via Self-Correction Agent Loop.
+- **[Add a main menu start screen before jumping into the game loop.]**: Built via ADHD breakdown -> Qwen -> Ponytail Cutter -> Self-Audit.
